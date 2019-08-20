@@ -2,11 +2,13 @@ package com.example.mobilevision;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -17,6 +19,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,6 +37,7 @@ public class StillOcrActivity extends AppCompatActivity {
     private SurfaceView surfaceCameraView;
     private TextView priceDisplay;
     private Button capture;
+    private ProgressBar progressBar;
     private TextRecognizer textRecognizer;
     final static int REQUEST_CODE = 100;
     boolean isPermissionGranted = false;
@@ -43,10 +47,11 @@ public class StillOcrActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_still_ocr);
 
-        surfaceCameraView = findViewById(R.id.image_sv);
+        surfaceCameraView = findViewById(R.id.still_ocr_image_sv);
 //        priceDisplay = findViewById(R.id.price_tv);
-        capture = findViewById(R.id.capture_btn);
+        capture = findViewById(R.id.still_ocr_capture_btn);
         textRecognizer = new TextRecognizer.Builder(getApplicationContext()).build();
+        progressBar = findViewById(R.id.still_ocr_pb);
 
         isPermissionGranted = requestCameraPermissions();
 
@@ -70,6 +75,7 @@ public class StillOcrActivity extends AppCompatActivity {
     }
 
     private void captureImage() {
+        progressBar.setVisibility(View.VISIBLE);
         cameraSource.takePicture(null, new CameraSource.PictureCallback() {
             @Override
             public void onPictureTaken(byte[] bytes) {
@@ -83,10 +89,34 @@ public class StillOcrActivity extends AppCompatActivity {
                     string.append(item.getValue());
                     string.append("\n");
                 }
+                progressBar.setVisibility(View.INVISIBLE);
                 Toast.makeText(StillOcrActivity.this, string.toString(), Toast.LENGTH_LONG).show();
+                showPrice(string.toString());
 //                priceDisplay.setText(string);
             }
         });
+    }
+
+    private void showPrice(String toString) {
+        AlertDialog.Builder priceDialog = new AlertDialog.Builder(this);
+        priceDialog.setMessage("Price: ")
+                .setPositiveButton("Save", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Toast.makeText(StillOcrActivity.this,"Saved", Toast.LENGTH_LONG).show();
+                    }
+                })
+                .setNegativeButton("Discard", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                        Toast.makeText(StillOcrActivity.this, "Okay", Toast.LENGTH_LONG).show();
+                    }
+                });
+        AlertDialog alert = priceDialog.create();
+        alert.setTitle("Detected price");
+        alert.show();
+
     }
 
     private void showCameraSource() {

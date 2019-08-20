@@ -19,13 +19,20 @@
     </com.google.android.material.appbar.AppBarLayout>
 
     <SurfaceView
-        android:id="@+id/image_sv"
+        android:id="@+id/still_ocr_image_sv"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/still_ocr_ap" />
+    
+    <ProgressBar
+        android:id="@+id/still_ocr_pb"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_centerInParent="true"
+        android:visibility="invisible"/>
 
     <Button
-        android:id="@+id/capture_btn"
+        android:id="@+id/still_ocr_capture_btn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="32dp"
