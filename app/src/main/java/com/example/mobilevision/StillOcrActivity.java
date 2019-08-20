@@ -79,7 +79,7 @@ public class StillOcrActivity extends AppCompatActivity {
         cameraSource.takePicture(null, new CameraSource.PictureCallback() {
             @Override
             public void onPictureTaken(byte[] bytes) {
-//                Frame billFrame = new Frame.Builder().setImageData(ByteBuffer.wrap(bytes), 400, 400, ImageFormat.NV21).build();
+                cameraSource.stop();
                 Bitmap billBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                 Frame billFrame = new Frame.Builder().setBitmap(billBitmap).build();
                 SparseArray<TextBlock> items = textRecognizer.detect(billFrame);
@@ -87,29 +87,36 @@ public class StillOcrActivity extends AppCompatActivity {
                 for(int i = 0; i < items.size(); i++) {
                     TextBlock item = items.valueAt(i);
                     string.append(item.getValue());
-                    string.append("\n");
+//                    string.append("\n");
                 }
                 progressBar.setVisibility(View.INVISIBLE);
                 Toast.makeText(StillOcrActivity.this, string.toString(), Toast.LENGTH_LONG).show();
                 showPrice(string.toString());
-//                priceDisplay.setText(string);
             }
         });
     }
 
-    private void showPrice(String toString) {
+    private void showPrice(String price) {
         AlertDialog.Builder priceDialog = new AlertDialog.Builder(this);
-        priceDialog.setMessage("Price: ")
+        priceDialog.setMessage("Price: " + price)
                 .setPositiveButton("Save", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         Toast.makeText(StillOcrActivity.this,"Saved", Toast.LENGTH_LONG).show();
+                        finish();
+                        //Save in db
                     }
                 })
                 .setNegativeButton("Discard", new DialogInterface.OnClickListener() {
+                    @SuppressLint("MissingPermission")
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.cancel();
+                        try {
+                            cameraSource.start(surfaceCameraView.getHolder());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                         Toast.makeText(StillOcrActivity.this, "Okay", Toast.LENGTH_LONG).show();
                     }
                 });
@@ -145,7 +152,7 @@ public class StillOcrActivity extends AppCompatActivity {
 
             @Override
             public void surfaceDestroyed(SurfaceHolder holder) {
-
+                cameraSource.release();
             }
         });
 
