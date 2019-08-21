@@ -41,6 +41,9 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.SimpleTimeZone;
 
+/**
+ * This activity displays the camera and displays the detected price using the MobileVison API
+ */
 public class StillOcrActivity extends AppCompatActivity {
 
     private String TAG = StillOcrActivity.class.getName();
@@ -91,6 +94,8 @@ public class StillOcrActivity extends AppCompatActivity {
             @Override
             public void onPictureTaken(byte[] bytes) {
                 cameraSource.stop();
+
+                //create a frame from the bitmap for the textrecognizer to detect text
                 Bitmap billBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                 Frame billFrame = new Frame.Builder().setBitmap(billBitmap).build();
                 SparseArray<TextBlock> items = textRecognizer.detect(billFrame);
@@ -122,6 +127,8 @@ public class StillOcrActivity extends AppCompatActivity {
                         Bills bill = new Bills();
                         bill.setDate(date);
                         bill.setPrice(price);
+
+                        //store the info in database
                         DatabaseHelper.getInstance(StillOcrActivity.this)
                                 .getDatabase()
                                 .billsDao()

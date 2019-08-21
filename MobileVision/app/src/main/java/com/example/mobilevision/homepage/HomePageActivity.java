@@ -17,6 +17,9 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 
+/**
+ * Homepage class
+ */
 public class HomePageActivity extends AppCompatActivity {
 
     private FloatingActionButton openCameraFab;
@@ -37,6 +40,7 @@ public class HomePageActivity extends AppCompatActivity {
             }
         });
 
+        //get all the data stored in the database
         prices = (ArrayList<Bills>)DatabaseHelper.getInstance(this)
                 .getDatabase()
                 .billsDao()
@@ -56,6 +60,8 @@ public class HomePageActivity extends AppCompatActivity {
     @Override
     protected void onRestart() {
         super.onRestart();
+
+        //get data(including any new ones, if any) from database coming back
         prices = (ArrayList<Bills>)DatabaseHelper.getInstance(this)
                 .getDatabase()
                 .billsDao()

@@ -5,6 +5,10 @@ import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
+
+/**
+ * Bill table that stores detected price and date
+ */
 @Entity(tableName = "Bill")
 public class Bills {
 

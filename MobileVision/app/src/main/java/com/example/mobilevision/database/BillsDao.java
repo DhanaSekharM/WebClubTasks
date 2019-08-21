@@ -8,6 +8,9 @@ import androidx.room.Query;
 
 import java.util.List;
 
+/**
+ * Operation to be performed on the Bill table
+ */
 @Dao
 public interface BillsDao {
 

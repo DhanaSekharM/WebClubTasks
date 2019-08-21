@@ -4,6 +4,9 @@ import android.content.Context;
 
 import androidx.room.Room;
 
+/**
+ * Singleton helper class to connect to the database
+ */
 public class DatabaseHelper {
 
     private static DatabaseHelper instance;

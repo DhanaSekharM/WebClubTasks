@@ -18,6 +18,9 @@ import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 
+/**
+ * Recycler view adapter to display stored information
+ */
 public class HomepageAdapter extends RecyclerView.Adapter<HomepageAdapter.HomepageAdapterViewHolder> {
 
     private ArrayList<Bills> prices;
@@ -61,6 +64,7 @@ public class HomepageAdapter extends RecyclerView.Adapter<HomepageAdapter.Homepa
             date = itemView.findViewById(R.id.homepage_tv_date);
             deleteCard = itemView.findViewById(R.id.homepage_iv_delete);
 
+            //for deleting a card
             deleteCard.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -78,6 +82,7 @@ public class HomepageAdapter extends RecyclerView.Adapter<HomepageAdapter.Homepa
         undoSnackBar.setAction("Undo", new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //reinsert the item
                 prices.add(position, removedItem);
                 notifyItemInserted(position);
             }
@@ -92,6 +97,8 @@ public class HomepageAdapter extends RecyclerView.Adapter<HomepageAdapter.Homepa
             @Override
             public void onDismissed(Snackbar transientBottomBar, int event) {
                 super.onDismissed(transientBottomBar, event);
+
+                //delete the item from database if the user does not press the undo option
                 if(event == Snackbar.Callback.DISMISS_EVENT_MANUAL || event == Snackbar.Callback.DISMISS_EVENT_TIMEOUT || event == Snackbar.Callback.DISMISS_EVENT_SWIPE) {
                     DatabaseHelper.getInstance(context)
                             .getDatabase()
