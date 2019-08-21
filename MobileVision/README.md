@@ -16,9 +16,7 @@ https://github.com/DhanaSekharM/WebClubTasks.git
 
 ## Screenshots
 
-![](Screenshots/Scan.png)   ![](Screenshots/Detect.png)   ![](Screenshots/Display.png)
-
-
+<img src="Screenshots/Scan.png" width="250" heigth="500"> <img src="Screenshots/Detect.png" width="250" heigth="500">  <img src="Screenshots/Display.png" width="250" heigth="500">
 
 
 
