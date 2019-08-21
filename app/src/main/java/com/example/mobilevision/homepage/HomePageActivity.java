@@ -49,7 +49,7 @@ public class HomePageActivity extends AppCompatActivity {
     private void setUpRecyclerView() {
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
-        HomepageAdapter adapter = new HomepageAdapter(prices, this);
+        HomepageAdapter adapter = new HomepageAdapter(recyclerView, prices, this);
         recyclerView.setAdapter(adapter);
     }
 
