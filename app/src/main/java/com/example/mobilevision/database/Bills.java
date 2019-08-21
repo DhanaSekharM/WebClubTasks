@@ -14,16 +14,18 @@ public class Bills {
     private int id;
 
     @ColumnInfo
-    private float price;
+    private String price;
 
     @ColumnInfo
     private String date;
 
-    public float getPrice() {
+
+
+    public String getPrice() {
         return price;
     }
 
-    public void setPrice(float price) {
+    public void setPrice(String price) {
         this.price = price;
     }
 
