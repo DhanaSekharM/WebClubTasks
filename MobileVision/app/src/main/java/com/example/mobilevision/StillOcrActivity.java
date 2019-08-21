@@ -181,7 +181,7 @@ public class StillOcrActivity extends AppCompatActivity {
 
             @Override
             public void surfaceDestroyed(SurfaceHolder holder) {
-                cameraSource.release();
+
             }
         });
 
