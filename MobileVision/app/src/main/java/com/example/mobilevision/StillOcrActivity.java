@@ -106,7 +106,6 @@ public class StillOcrActivity extends AppCompatActivity {
 //                    string.append("\n");
                 }
                 progressBar.setVisibility(View.INVISIBLE);
-                Toast.makeText(StillOcrActivity.this, string.toString(), Toast.LENGTH_LONG).show();
                 showPrice(string.toString());
             }
         });
@@ -146,7 +145,6 @@ public class StillOcrActivity extends AppCompatActivity {
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-                        Toast.makeText(StillOcrActivity.this, "Okay", Toast.LENGTH_LONG).show();
                     }
                 });
         AlertDialog alert = priceDialog.create();
