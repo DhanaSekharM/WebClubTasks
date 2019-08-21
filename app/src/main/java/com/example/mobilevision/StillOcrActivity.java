@@ -23,12 +23,21 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.mobilevision.database.Bills;
+import com.example.mobilevision.database.DatabaseHelper;
 import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.Frame;
 import com.google.android.gms.vision.text.TextBlock;
 import com.google.android.gms.vision.text.TextRecognizer;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.SimpleTimeZone;
 
 public class StillOcrActivity extends AppCompatActivity {
 
@@ -96,7 +105,7 @@ public class StillOcrActivity extends AppCompatActivity {
         });
     }
 
-    private void showPrice(String price) {
+    private void showPrice(final String price) {
         AlertDialog.Builder priceDialog = new AlertDialog.Builder(this);
         priceDialog.setMessage("Price: " + price)
                 .setPositiveButton("Save", new DialogInterface.OnClickListener() {
@@ -105,6 +114,17 @@ public class StillOcrActivity extends AppCompatActivity {
                         Toast.makeText(StillOcrActivity.this,"Saved", Toast.LENGTH_LONG).show();
                         finish();
                         //Save in db
+                        Date currentDateAndTime = Calendar.getInstance().getTime();
+                        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+                        String date = dateFormat.format(currentDateAndTime);
+                        Bills bill = new Bills();
+                        bill.setDate(date);
+                        bill.setPrice(price);
+                        DatabaseHelper.getInstance(StillOcrActivity.this)
+                                .getDatabase()
+                                .billsDao()
+                                .insert(bill);
+
                     }
                 })
                 .setNegativeButton("Discard", new DialogInterface.OnClickListener() {
