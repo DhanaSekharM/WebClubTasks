@@ -38,7 +38,6 @@
         </LinearLayout>
 
 
-
         <TextView
             android:id="@+id/homepage_tv_price"
             android:layout_width="wrap_content"
@@ -46,6 +45,7 @@
             android:layout_margin="16dp"
             android:text="Price"
             android:textColor="@color/black"
+            android:textSize="24sp"
             android:textStyle="bold" />
 
 

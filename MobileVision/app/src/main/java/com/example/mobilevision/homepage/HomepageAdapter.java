@@ -46,7 +46,7 @@ public class HomepageAdapter extends RecyclerView.Adapter<HomepageAdapter.Homepa
 
     @Override
     public void onBindViewHolder(@NonNull HomepageAdapterViewHolder holder, final int position) {
-        holder.price.setText(prices.get(position).getPrice());
+        holder.price.setText("Rs."+prices.get(position).getPrice());
         holder.date.setText(prices.get(position).getDate());
     }
 
@@ -99,7 +99,8 @@ public class HomepageAdapter extends RecyclerView.Adapter<HomepageAdapter.Homepa
                 super.onDismissed(transientBottomBar, event);
 
                 //delete the item from database if the user does not press the undo option
-                if(event == Snackbar.Callback.DISMISS_EVENT_MANUAL || event == Snackbar.Callback.DISMISS_EVENT_TIMEOUT || event == Snackbar.Callback.DISMISS_EVENT_SWIPE) {
+                if(event == Snackbar.Callback.DISMISS_EVENT_MANUAL || event == Snackbar.Callback.DISMISS_EVENT_TIMEOUT
+                        || event == Snackbar.Callback.DISMISS_EVENT_SWIPE || event == Snackbar.Callback.DISMISS_EVENT_CONSECUTIVE) {
                     DatabaseHelper.getInstance(context)
                             .getDatabase()
                             .billsDao()

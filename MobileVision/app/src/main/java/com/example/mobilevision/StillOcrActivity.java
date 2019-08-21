@@ -121,7 +121,7 @@ public class StillOcrActivity extends AppCompatActivity {
                         finish();
                         //Save in db
                         Date currentDateAndTime = Calendar.getInstance().getTime();
-                        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+                        SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, HH:mm");
                         String date = dateFormat.format(currentDateAndTime);
                         Bills bill = new Bills();
                         bill.setDate(date);
