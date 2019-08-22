@@ -18,7 +18,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.ArrayList;
 
 /**
- * Homepage class
+ * Homepage activity to display all the saved prices
  */
 public class HomePageActivity extends AppCompatActivity {
 
@@ -35,7 +35,6 @@ public class HomePageActivity extends AppCompatActivity {
         openCameraFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                finish();
                 startActivity(new Intent(HomePageActivity.this, StillOcrActivity.class));
             }
         });
@@ -61,7 +60,7 @@ public class HomePageActivity extends AppCompatActivity {
     protected void onRestart() {
         super.onRestart();
 
-        //get data(including any new ones, if any) from database coming back
+        //get data(including any new ones, if any) from database on returning from the StillOcrActivity
         prices = (ArrayList<Bills>)DatabaseHelper.getInstance(this)
                 .getDatabase()
                 .billsDao()

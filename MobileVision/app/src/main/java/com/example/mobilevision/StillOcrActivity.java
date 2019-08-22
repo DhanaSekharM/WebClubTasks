@@ -9,7 +9,6 @@ import androidx.core.app.ActivityCompat;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -26,20 +25,20 @@ import android.widget.Toast;
 
 import com.example.mobilevision.database.Bills;
 import com.example.mobilevision.database.DatabaseHelper;
-import com.example.mobilevision.homepage.HomePageActivity;
 import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.Frame;
+import com.google.android.gms.vision.text.Element;
+import com.google.android.gms.vision.text.Line;
 import com.google.android.gms.vision.text.TextBlock;
 import com.google.android.gms.vision.text.TextRecognizer;
 
 import java.io.IOException;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
-import java.util.SimpleTimeZone;
+import java.util.List;
 
 /**
  * This activity displays the camera and displays the detected price using the MobileVison API
@@ -48,8 +47,7 @@ public class StillOcrActivity extends AppCompatActivity {
 
     private String TAG = StillOcrActivity.class.getName();
     private CameraSource cameraSource;
-    private SurfaceView surfaceCameraView;
-    private TextView priceDisplay;
+    private SurfaceView cameraSurfaceView;
     private Button capture;
     private ProgressBar progressBar;
     private TextRecognizer textRecognizer;
@@ -61,12 +59,12 @@ public class StillOcrActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_still_ocr);
 
-        surfaceCameraView = findViewById(R.id.still_ocr_image_sv);
-//        priceDisplay = findViewById(R.id.price_tv);
+        cameraSurfaceView = findViewById(R.id.still_ocr_image_sv);
         capture = findViewById(R.id.still_ocr_capture_btn);
         textRecognizer = new TextRecognizer.Builder(getApplicationContext()).build();
         progressBar = findViewById(R.id.still_ocr_pb);
 
+        //check and request for camera permissions
         isPermissionGranted = requestCameraPermissions();
 
         if(isPermissionGranted) {
@@ -82,14 +80,18 @@ public class StillOcrActivity extends AppCompatActivity {
         capture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                captureImage();
+                captureImageAndDetectAmount();
             }
         });
 
     }
 
-    private void captureImage() {
+    private void captureImageAndDetectAmount() {
         progressBar.setVisibility(View.VISIBLE);
+
+        /*Take picture when the capture button is pressed. The picture callback is fired once the
+            picture is taken and the image is then processed.
+         */
         cameraSource.takePicture(null, new CameraSource.PictureCallback() {
             @Override
             public void onPictureTaken(byte[] bytes) {
@@ -99,18 +101,45 @@ public class StillOcrActivity extends AppCompatActivity {
                 Bitmap billBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                 Frame billFrame = new Frame.Builder().setBitmap(billBitmap).build();
                 SparseArray<TextBlock> items = textRecognizer.detect(billFrame);
-                StringBuilder string = new StringBuilder();
+                String price;
+                ArrayList<String> detected = new ArrayList<>();
+                ArrayList<Double> detectedPrices = new ArrayList<>();   //A list to store all the prices detected on the bill
+
+                //Capture the bill and detect all the numbers(which includes the bill amount) from the bill
                 for(int i = 0; i < items.size(); i++) {
                     TextBlock item = items.valueAt(i);
-                    string.append(item.getValue());
+                    List<Line>  lines = (List<Line>) item.getComponents();   // get lines from the textblock(equivalent to a paragraph)
+
+                    for(Line line : lines) {
+                        List<Element> elements = (List<Element>) line.getComponents(); //get elements(equivalent to words) from a line
+                        for(Element element : elements) {
+                            //To ignore the text in the bill
+                            try {
+                                detectedPrices.add(Double.parseDouble(element.getValue()));
+                            } catch (NumberFormatException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+
+                    detected.add(item.getValue());
 //                    string.append("\n");
                 }
+                if(detectedPrices.size() != 0) {
+                    price = Collections.max(detectedPrices).toString();
+                } else {
+                    price = "NA";
+                }
                 progressBar.setVisibility(View.INVISIBLE);
-                showPrice(string.toString());
+                showPrice(price);
             }
         });
     }
 
+    /**
+     * Display a dialog box containing the detected price with an option to save it.
+     * @param price Detected price from the bill
+     */
     private void showPrice(final String price) {
         AlertDialog.Builder priceDialog = new AlertDialog.Builder(this);
         priceDialog.setMessage("Price: " + price)
@@ -119,7 +148,6 @@ public class StillOcrActivity extends AppCompatActivity {
                     public void onClick(DialogInterface dialog, int which) {
                         Toast.makeText(StillOcrActivity.this,"Saved", Toast.LENGTH_LONG).show();
                         finish();
-                        //Save in db
                         Date currentDateAndTime = Calendar.getInstance().getTime();
                         SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, HH:mm");
                         String date = dateFormat.format(currentDateAndTime);
@@ -141,7 +169,8 @@ public class StillOcrActivity extends AppCompatActivity {
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.cancel();
                         try {
-                            cameraSource.start(surfaceCameraView.getHolder());
+                            //restart the camera
+                            cameraSource.start(cameraSurfaceView.getHolder());
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -149,24 +178,26 @@ public class StillOcrActivity extends AppCompatActivity {
                 });
         AlertDialog alert = priceDialog.create();
         alert.setTitle("Detected price");
+        alert.setCancelable(false);
         alert.show();
 
     }
 
     private void showCameraSource() {
 
+        //Builds a camera source which manages the camera along with the detector
         cameraSource = new CameraSource.Builder(getApplicationContext(), textRecognizer)
                 .setAutoFocusEnabled(true)
                 .setFacing(CameraSource.CAMERA_FACING_BACK)
                 .setRequestedFps(2.0f)
                 .build();
 
-        surfaceCameraView.getHolder().addCallback(new SurfaceHolder.Callback() {
+        cameraSurfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
             @SuppressLint("MissingPermission")
             @Override
             public void surfaceCreated(SurfaceHolder holder) {
                 try {
-                    cameraSource.start(surfaceCameraView.getHolder());
+                    cameraSource.start(cameraSurfaceView.getHolder());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -187,7 +218,7 @@ public class StillOcrActivity extends AppCompatActivity {
 
     private boolean requestCameraPermissions() {
         if(checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_DENIED) {
-            ActivityCompat.requestPermissions(StillOcrActivity.this, new String[]{Manifest.permission.CAMERA}, REQUEST_CODE);
+            ActivityCompat.requestPermissions(StillOcrActivity.this, new String[]{Manifest.permission.CAMERA}, REQUEST_CODE);  //request for camera access if not already granted
             return false;
         } else {
             return true;
