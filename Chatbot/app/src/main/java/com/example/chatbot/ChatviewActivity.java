@@ -46,11 +46,13 @@ public class ChatviewActivity extends AppCompatActivity {
     private ChatView chatView;
     private IChatUser user, bot;
     private final static String TAG = ChatviewActivity.class.getName();
+    //bearer access token
     final String auth = "ya29.c.ElpvBxft9-JgyQr62glTjS-5VVUTkrNm282PKNy2qJSAJLrrRQBFY-wz6XBRZtmb2IO9Dn3bXzD48tP_lHxTBaeYSZSG02rurpT1Rl_8q9O0_F-nLuhISqRsaaM";
+    //agent url
     String url = "https://dialogflow.googleapis.com/v2/projects/chatbot-hetaqa/agent/sessions/123456789:detectIntent";
     private final static String userId = "0", botId = "1";
     private final static String userName = "User", botName = "Bot";
-    private FirebaseFirestore firestore = FirebaseFirestore.getInstance();
+    private FirebaseFirestore firestore = FirebaseFirestore.getInstance();   //Obtaining firestore reference
     private ProgressBar progressBar;
 
     @Override
@@ -64,7 +66,6 @@ public class ChatviewActivity extends AppCompatActivity {
         bot = createUser(botId, botName);
 
         setChatViewAttributes();
-
 
         populateChatviewFromDb();
 
@@ -90,6 +91,9 @@ public class ChatviewActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * Populate the chat view with previous messages from the database
+     */
     private void populateChatviewFromDb() {
         progressBar.setVisibility(View.VISIBLE);
         firestore.collection("chat")
@@ -184,22 +188,21 @@ public class ChatviewActivity extends AppCompatActivity {
                                     e.printStackTrace();
                                 }
 
-                                Message recMessage = null;
+                                Message recvMessage = null;
                                 try {
-                                    recMessage = createBotMessage(null, reply);
+                                    recvMessage = createBotMessage(null, reply);
                                 } catch (ParseException e) {
                                     e.printStackTrace();
                                 }
-                                chatView.receive(recMessage);
+                                chatView.receive(recvMessage);
                                 SimpleDateFormat format = new SimpleDateFormat("MMM dd,yyyy HH:mm");
                                 String sendTime = format.format(sendMessage.getSendTime().getTime());
-                                String recvTime = format.format(recMessage.getSendTime().getTime());
+                                String recvTime = format.format(recvMessage.getSendTime().getTime());
                                 Messages chat = new Messages(sendMessage.getText(), reply, sendTime, recvTime);
-                                Log.d(TAG, recMessage.getDateSeparateText());
+                                Log.d(TAG, recvMessage.getDateSeparateText());
 
                                 //store in firebase db
 
-//                                String id = firestore.collection("chat").document().getId();
                                 firestore.collection("chat")
                                         .add(chat)
                                         .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
@@ -225,7 +228,7 @@ public class ChatviewActivity extends AppCompatActivity {
                         }) {
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
-
+                //header for bearer authentication
                 Map<String, String> header = new HashMap<>();
                 header.put("Content-Type", "application/json");
                 header.put("Authorization", "Bearer " + auth);
@@ -270,6 +273,12 @@ public class ChatviewActivity extends AppCompatActivity {
         chatView.setMessageMarginBottom(5);
     }
 
+    /**
+     * Creates a bot or user
+     * @param id id of the user
+     * @param name user name
+     * @return created user object
+     */
     private IChatUser createUser(final String id, final String name) {
         return new IChatUser() {
             @Override
