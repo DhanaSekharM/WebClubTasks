@@ -45,7 +45,7 @@ public class ChatviewActivity extends AppCompatActivity {
     private ChatView chatView;
     private IChatUser user, bot;
     private final static String TAG = ChatviewActivity.class.getName();
-    final String auth = "ya29.c.ElpvBzqdo3gkqtB9Aq6yMwNChTm4UnjDnyHVV2HXFmcm0hX-ANv3eItjfLEfENa_Nm_T_q5XAd_ZgheIZBMSwap-YUn7kQnVDMPk8xyaa3GvMV61R6OGpQNb4TI";
+    final String auth = "ya29.GltvB9tJ-pIq8dTSNPngwrXWdv3gqVjvKK3ArKotuh_fsOSnKgvozSWVKc6WopvULj-hf2n6scAURvG5ZIK7tdlTJaux_zqAtdompELEN-e1IFsxxOWkGhIGi_7M";
     String url = "https://dialogflow.googleapis.com/v2/projects/chatbot-hetaqa/agent/sessions/123456789:detectIntent";
     private final static String userId = "0", botId = "1";
     private final static String userName = "User", botName = "Bot";
