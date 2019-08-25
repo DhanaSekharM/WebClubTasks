@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
@@ -45,22 +46,25 @@ public class ChatviewActivity extends AppCompatActivity {
     private ChatView chatView;
     private IChatUser user, bot;
     private final static String TAG = ChatviewActivity.class.getName();
-    final String auth = "ya29.c.ElpvBzqdo3gkqtB9Aq6yMwNChTm4UnjDnyHVV2HXFmcm0hX-ANv3eItjfLEfENa_Nm_T_q5XAd_ZgheIZBMSwap-YUn7kQnVDMPk8xyaa3GvMV61R6OGpQNb4TI";
+    final String auth = "ya29.c.ElpvBxft9-JgyQr62glTjS-5VVUTkrNm282PKNy2qJSAJLrrRQBFY-wz6XBRZtmb2IO9Dn3bXzD48tP_lHxTBaeYSZSG02rurpT1Rl_8q9O0_F-nLuhISqRsaaM";
     String url = "https://dialogflow.googleapis.com/v2/projects/chatbot-hetaqa/agent/sessions/123456789:detectIntent";
     private final static String userId = "0", botId = "1";
     private final static String userName = "User", botName = "Bot";
     private FirebaseFirestore firestore = FirebaseFirestore.getInstance();
+    private ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chatview);
         chatView = findViewById(R.id.chat_view);
+        progressBar = findViewById(R.id.chat_view_pb);
 
         user = createUser(userId, userName);
         bot = createUser(botId, botName);
 
         setChatViewAttributes();
+
 
         populateChatviewFromDb();
 
@@ -87,6 +91,7 @@ public class ChatviewActivity extends AppCompatActivity {
     }
 
     private void populateChatviewFromDb() {
+        progressBar.setVisibility(View.VISIBLE);
         firestore.collection("chat")
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
@@ -110,9 +115,9 @@ public class ChatviewActivity extends AppCompatActivity {
                                     e.printStackTrace();
                                 }
 
-
                             }
                         }
+                        progressBar.setVisibility(View.GONE);
                     }
                 });
 
@@ -255,7 +260,7 @@ public class ChatviewActivity extends AppCompatActivity {
     }
 
     private void setChatViewAttributes() {
-        chatView.setRightBubbleColor(ContextCompat.getColor(this, R.color.colorPrimaryDark));
+        chatView.setRightBubbleColor(ContextCompat.getColor(this, R.color.colorPrimary));
         chatView.setLeftBubbleColor(Color.WHITE);
         chatView.setBackgroundColor(ContextCompat.getColor(this, R.color.lightBlue));
         chatView.setRightMessageTextColor(Color.BLACK);
