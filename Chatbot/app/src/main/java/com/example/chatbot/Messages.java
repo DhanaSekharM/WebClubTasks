@@ -13,6 +13,9 @@ public class Messages {
         this.replyTime = replyTime;
     }
 
+    public Messages() {
+    }
+
     public String getUserMessage() {
         return userMessage;
     }

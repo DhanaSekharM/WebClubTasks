@@ -9,6 +9,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
@@ -32,8 +33,10 @@ import com.google.firebase.firestore.QuerySnapshot;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,7 +45,7 @@ public class ChatviewActivity extends AppCompatActivity {
     private ChatView chatView;
     private IChatUser user, bot;
     private final static String TAG = ChatviewActivity.class.getName();
-    final String auth = "ya29.c.ElpvB8inhM5iIt9YGg25BrLqYdxGMga5w2iOUFEihNOZbBW2paCE4morVS0QN1-nWz4iF9TdAMqY_GeuaxKGa0M2KHsbKHCUobM3oBEH2vKlT1e1VpjA25Q2N_4";
+    final String auth = "ya29.c.ElpvBzqdo3gkqtB9Aq6yMwNChTm4UnjDnyHVV2HXFmcm0hX-ANv3eItjfLEfENa_Nm_T_q5XAd_ZgheIZBMSwap-YUn7kQnVDMPk8xyaa3GvMV61R6OGpQNb4TI";
     String url = "https://dialogflow.googleapis.com/v2/projects/chatbot-hetaqa/agent/sessions/123456789:detectIntent";
     private final static String userId = "0", botId = "1";
     private final static String userName = "User", botName = "Bot";
@@ -64,12 +67,12 @@ public class ChatviewActivity extends AppCompatActivity {
         chatView.setOnClickSendButtonListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Message sendMessage = new Message.Builder()
-                        .setUser(user)
-                        .setRight(true)
-                        .setText(chatView.getInputText())
-                        .hideIcon(true)
-                        .build();
+                Message sendMessage = null;
+                try {
+                    sendMessage = createUserMessage(null);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
                 try {
                     makeRequest(sendMessage);
                 } catch (JSONException e) {
@@ -84,8 +87,75 @@ public class ChatviewActivity extends AppCompatActivity {
     }
 
     private void populateChatviewFromDb() {
-      
+        firestore.collection("chat")
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if(task.isSuccessful()) {
+                            for(QueryDocumentSnapshot document : task.getResult()) {
+                                Messages messages = document.toObject(Messages.class);
+                                Message sendMessage, replyMessage;
+                                try {
+                                    sendMessage = createUserMessage(messages);
+                                    replyMessage = createBotMessage(messages, null);
 
+                                    chatView.send(sendMessage);
+                                    chatView.setInputText("");
+
+                                    chatView.receive(replyMessage);
+
+
+                                } catch (ParseException e) {
+                                    e.printStackTrace();
+                                }
+
+
+                            }
+                        }
+                    }
+                });
+
+    }
+
+    private Message createUserMessage(Messages messages) throws ParseException {
+        Message message = new Message.Builder()
+                .setUser(user)
+                .setRight(true)
+                .hideIcon(true)
+                .build();
+        if(messages == null) {
+            message.setText(chatView.getInputText());
+        } else {
+            message.setText(messages.getUserMessage());
+            SimpleDateFormat format = new SimpleDateFormat("MMM dd,yyyy HH:mm");
+            Date date = format.parse(messages.getSendTime());
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(date);
+            message.setSendTime(calendar);
+        }
+
+        return message;
+    }
+
+    private Message createBotMessage(Messages messages, String reply) throws ParseException {
+        Message message = new Message.Builder()
+                .setUser(bot)
+                .setRight(false)
+                .hideIcon(true)
+                .build();
+        if(messages == null) {
+            message.setText(reply);
+        } else {
+            message.setText(messages.getBotReply());
+            SimpleDateFormat format = new SimpleDateFormat("MMM dd,yyyy HH:mm");
+            Date date = format.parse(messages.getReplyTime());
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(date);
+            message.setSendTime(calendar);
+        }
+
+        return message;
     }
 
     /**
@@ -109,12 +179,12 @@ public class ChatviewActivity extends AppCompatActivity {
                                     e.printStackTrace();
                                 }
 
-                                Message recMessage = new Message.Builder()
-                                        .setUser(bot)
-                                        .setRight(false)
-                                        .setText(reply)
-                                        .hideIcon(true)
-                                        .build();
+                                Message recMessage = null;
+                                try {
+                                    recMessage = createBotMessage(null, reply);
+                                } catch (ParseException e) {
+                                    e.printStackTrace();
+                                }
                                 chatView.receive(recMessage);
                                 SimpleDateFormat format = new SimpleDateFormat("MMM dd,yyyy HH:mm");
                                 String sendTime = format.format(sendMessage.getSendTime().getTime());
