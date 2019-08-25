@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
@@ -45,17 +46,21 @@ public class ChatviewActivity extends AppCompatActivity {
     private ChatView chatView;
     private IChatUser user, bot;
     private final static String TAG = ChatviewActivity.class.getName();
-    final String auth = "ya29.GltvB9tJ-pIq8dTSNPngwrXWdv3gqVjvKK3ArKotuh_fsOSnKgvozSWVKc6WopvULj-hf2n6scAURvG5ZIK7tdlTJaux_zqAtdompELEN-e1IFsxxOWkGhIGi_7M";
+    //bearer access token
+    final String auth = "ya29.c.ElpvBxft9-JgyQr62glTjS-5VVUTkrNm282PKNy2qJSAJLrrRQBFY-wz6XBRZtmb2IO9Dn3bXzD48tP_lHxTBaeYSZSG02rurpT1Rl_8q9O0_F-nLuhISqRsaaM";
+    //agent url
     String url = "https://dialogflow.googleapis.com/v2/projects/chatbot-hetaqa/agent/sessions/123456789:detectIntent";
     private final static String userId = "0", botId = "1";
     private final static String userName = "User", botName = "Bot";
-    private FirebaseFirestore firestore = FirebaseFirestore.getInstance();
+    private FirebaseFirestore firestore = FirebaseFirestore.getInstance();   //Obtaining firestore reference
+    private ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chatview);
         chatView = findViewById(R.id.chat_view);
+        progressBar = findViewById(R.id.chat_view_pb);
 
         user = createUser(userId, userName);
         bot = createUser(botId, botName);
@@ -86,7 +91,11 @@ public class ChatviewActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * Populate the chat view with previous messages from the database
+     */
     private void populateChatviewFromDb() {
+        progressBar.setVisibility(View.VISIBLE);
         firestore.collection("chat")
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
@@ -110,9 +119,9 @@ public class ChatviewActivity extends AppCompatActivity {
                                     e.printStackTrace();
                                 }
 
-
                             }
                         }
+                        progressBar.setVisibility(View.GONE);
                     }
                 });
 
@@ -179,22 +188,21 @@ public class ChatviewActivity extends AppCompatActivity {
                                     e.printStackTrace();
                                 }
 
-                                Message recMessage = null;
+                                Message recvMessage = null;
                                 try {
-                                    recMessage = createBotMessage(null, reply);
+                                    recvMessage = createBotMessage(null, reply);
                                 } catch (ParseException e) {
                                     e.printStackTrace();
                                 }
-                                chatView.receive(recMessage);
+                                chatView.receive(recvMessage);
                                 SimpleDateFormat format = new SimpleDateFormat("MMM dd,yyyy HH:mm");
                                 String sendTime = format.format(sendMessage.getSendTime().getTime());
-                                String recvTime = format.format(recMessage.getSendTime().getTime());
+                                String recvTime = format.format(recvMessage.getSendTime().getTime());
                                 Messages chat = new Messages(sendMessage.getText(), reply, sendTime, recvTime);
-                                Log.d(TAG, recMessage.getDateSeparateText());
+                                Log.d(TAG, recvMessage.getDateSeparateText());
 
                                 //store in firebase db
 
-//                                String id = firestore.collection("chat").document().getId();
                                 firestore.collection("chat")
                                         .add(chat)
                                         .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
@@ -220,7 +228,7 @@ public class ChatviewActivity extends AppCompatActivity {
                         }) {
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
-
+                //header for bearer authentication
                 Map<String, String> header = new HashMap<>();
                 header.put("Content-Type", "application/json");
                 header.put("Authorization", "Bearer " + auth);
@@ -255,7 +263,7 @@ public class ChatviewActivity extends AppCompatActivity {
     }
 
     private void setChatViewAttributes() {
-        chatView.setRightBubbleColor(ContextCompat.getColor(this, R.color.colorPrimaryDark));
+        chatView.setRightBubbleColor(ContextCompat.getColor(this, R.color.colorPrimary));
         chatView.setLeftBubbleColor(Color.WHITE);
         chatView.setBackgroundColor(ContextCompat.getColor(this, R.color.lightBlue));
         chatView.setRightMessageTextColor(Color.BLACK);
@@ -265,6 +273,12 @@ public class ChatviewActivity extends AppCompatActivity {
         chatView.setMessageMarginBottom(5);
     }
 
+    /**
+     * Creates a bot or user
+     * @param id id of the user
+     * @param name user name
+     * @return created user object
+     */
     private IChatUser createUser(final String id, final String name) {
         return new IChatUser() {
             @Override
