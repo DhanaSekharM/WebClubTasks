@@ -1,29 +1,39 @@
 package com.example.chatbot;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
-import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.github.bassaer.chatmessageview.model.IChatUser;
 import com.github.bassaer.chatmessageview.model.Message;
-import com.github.bassaer.chatmessageview.util.ChatBot;
 import com.github.bassaer.chatmessageview.view.ChatView;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,24 +42,24 @@ public class ChatviewActivity extends AppCompatActivity {
     private ChatView chatView;
     private IChatUser user, bot;
     private final static String TAG = ChatviewActivity.class.getName();
-    final String auth = "ya29.c.ElpuBzfCC-Eo24TCgPI8OJdmdn4bJsAPJ5tYkyYc0MYRTVfUgvlBx5DJN_jDMI5Nv6g_p740vby4iJVuyELGYjtqcXkYBCjK3eH_Gvb1lhkgRk_iDg7TvPOrLqE";
+    final String auth = "ya29.c.ElpvB8inhM5iIt9YGg25BrLqYdxGMga5w2iOUFEihNOZbBW2paCE4morVS0QN1-nWz4iF9TdAMqY_GeuaxKGa0M2KHsbKHCUobM3oBEH2vKlT1e1VpjA25Q2N_4";
     String url = "https://dialogflow.googleapis.com/v2/projects/chatbot-hetaqa/agent/sessions/123456789:detectIntent";
+    private final static String userId = "0", botId = "1";
+    private final static String userName = "User", botName = "Bot";
+    private FirebaseFirestore firestore = FirebaseFirestore.getInstance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chatview);
-
         chatView = findViewById(R.id.chat_view);
-        final String userId = "0", botId = "1";
-        //add user Icon
-
-        final String userName = "User", botName = "Bot";
 
         user = createUser(userId, userName);
         bot = createUser(botId, botName);
 
         setChatViewAttributes();
+
+        populateChatviewFromDb();
 
         chatView.setOnClickSendButtonListener(new View.OnClickListener() {
             @Override
@@ -61,7 +71,7 @@ public class ChatviewActivity extends AppCompatActivity {
                         .hideIcon(true)
                         .build();
                 try {
-                    makeRequest(chatView.getInputText());
+                    makeRequest(sendMessage);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -73,14 +83,19 @@ public class ChatviewActivity extends AppCompatActivity {
 
     }
 
+    private void populateChatviewFromDb() {
+      
+
+    }
+
     /**
      * Make a post request to the dialogflow api to display the bot reply
      *
-     * @param inputText user inputted text
+     * @param sendMessage user inputted message object
      */
-    private void makeRequest(String inputText) throws JSONException {
+    private void makeRequest(final Message sendMessage) throws JSONException {
 
-        JSONObject body = createRequestObject(inputText);
+        JSONObject body = createJsonRequestObject(sendMessage.getText());
 
         JsonObjectRequest request = new JsonObjectRequest
                 (Request.Method.POST, url, body,
@@ -101,6 +116,29 @@ public class ChatviewActivity extends AppCompatActivity {
                                         .hideIcon(true)
                                         .build();
                                 chatView.receive(recMessage);
+                                SimpleDateFormat format = new SimpleDateFormat("MMM dd,yyyy HH:mm");
+                                String sendTime = format.format(sendMessage.getSendTime().getTime());
+                                String recvTime = format.format(recMessage.getSendTime().getTime());
+                                Messages chat = new Messages(sendMessage.getText(), reply, sendTime, recvTime);
+                                Log.d(TAG, recMessage.getDateSeparateText());
+
+                                //store in firebase db
+
+//                                String id = firestore.collection("chat").document().getId();
+                                firestore.collection("chat")
+                                        .add(chat)
+                                        .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                            @Override
+                                            public void onSuccess(DocumentReference documentReference) {
+                                                Log.d(TAG, "DocumentSnapshot added with ID: " + documentReference.getId());
+                                            }
+                                        })
+                                        .addOnFailureListener(new OnFailureListener() {
+                                            @Override
+                                            public void onFailure(@NonNull Exception e) {
+                                                Log.d(TAG, "Error adding document", e);
+                                            }
+                                        });
                             }
                         },
                         new Response.ErrorListener() {
@@ -131,7 +169,7 @@ public class ChatviewActivity extends AppCompatActivity {
      * @param inputText
      * @return final Json
      */
-    private JSONObject createRequestObject(String inputText) throws JSONException {
+    private JSONObject createJsonRequestObject(String inputText) throws JSONException {
         Map<String, String> text = new HashMap<>();
         JSONObject textObject = new JSONObject();
         JSONObject requestObject = new JSONObject();
