@@ -13,7 +13,7 @@ https://github.com/DhanaSekharM/WebClubTasks.git
 ```
 
 ## Screenshots
-<img src="Screenshots/Chat.png" width="250" heigth="500"> <img src="Screenshots/Detect.png" width="250" heigth="500">  <img src="Screenshots/Display.png" width="250" heigth="500">
+<img src="Screenshots/Chat.png" width="250" heigth="500">
 
 
 ## References and Library used
